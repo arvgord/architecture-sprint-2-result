@@ -58,8 +58,37 @@ use somedb
 for (var i = 0; i < 1000; i++) {
     db.helloDoc.insertOne({ age: i, name: "ly" + i })
 }
-db.helloDoc.countDocuments()
 EOF
 echo "Шардирование завершено и данные добавлены."
+
+#
+# 5. Проверка общего количества документов в базе данных
+#
+echo "Проверка общего количества документов в базе данных"
+docker-compose exec -T mongos_router mongosh --port 27020 --quiet <<EOF
+use somedb
+var count = db.helloDoc.countDocuments();
+print("Общее количество документов в базе данных: " + count);
+EOF
+
+#
+# 6. Проверка количества документов в первом шарде shard1
+#
+echo "Проверка количества документов в первом шарде shard1"
+docker-compose exec -T shard1 mongosh --port 27018 --quiet <<EOF
+use somedb
+var count = db.helloDoc.countDocuments();
+print("Общее количество документов в шарде shard1: " + count);
+EOF
+
+#
+# 7. Проверка количества документов во втором шарде shard2
+#
+echo "Проверка количества документов во втором шарде shard2"
+docker-compose exec -T shard2 mongosh --port 27019 --quiet <<EOF
+use somedb
+var count = db.helloDoc.countDocuments();
+print("Общее количество документов в шарде shard2: " + count);
+EOF
 
 read -p "Нажмите Enter для выхода..."
